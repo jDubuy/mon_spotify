@@ -19,7 +19,7 @@ def run_auto():
         print("⏳ Prochaine vérification dans 1 heure...\n")
         
         # Le script s'endort pendant 3600 secondes (1 heure)
-        time.sleep(300)
+        time.sleep(3600)
 
 if __name__ == "__main__":
     run_auto()
