@@ -1,9 +1,6 @@
 # Fichiers secrets (NE JAMAIS PARTAGER SUR GITHUB)
 .env
 
-# Base de données locale (On ne partage pas ton historique complet)
-*.db
-spotify_data.db
 
 # Environnement virtuel Python
 .venv/
