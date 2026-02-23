@@ -13,13 +13,14 @@ def init_db():
             track_id TEXT,
             track_name TEXT,
             artist_name TEXT,
-            duration_ms INTEGER
+            duration_ms INTEGER,
+            album_cover_url TEXT
         )
     ''')
     
     conn.commit()
     conn.close()
-    print("✅ Base de données 'spotify_data.db' prête et table 'history' créée !")
+    print("✅ Base de données 'spotify_data.db' prête !")
 
 if __name__ == "__main__":
     init_db()
