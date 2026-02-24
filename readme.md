@@ -42,6 +42,8 @@ Créez un fichier `.env` à la racine avec vos accès Spotify Developer :
 SPOTIPY_CLIENT_ID='votre_id'
 SPOTIPY_CLIENT_SECRET='votre_secret'
 SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+
+LASTFM_API_KEY='votre_clé_API'
 ```
 
 ### 3. Initialisation de la base de données

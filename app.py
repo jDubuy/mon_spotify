@@ -4,10 +4,12 @@ import streamlit as st
 import plotly.express as px
 import requests
 import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from bot import fetch_history
 
 # Configuration
+load_dotenv()
 st.set_page_config(page_title="Spotify Dashboard Pro", page_icon="🟢", layout="wide")
 
 # --- FONCTIONS DE DONNÉES ---
@@ -45,7 +47,7 @@ def show_artist_card(artist_name, df_full):
         img_path = artist_rows.iloc[0]['album_cover_url'] if not artist_rows.empty else ""
         col1, col2 = st.columns([1, 2])
         with col1:
-            st.image(img_path if img_path else "https://www.scdn.co/scannables/svg/only-logo/255/white", use_container_width=True)
+            st.image(img_path if img_path else "https://www.scdn.co/scannables/svg/only-logo/255/white", width="stretch")
             st.metric("Écoutes", len(artist_rows))
         with col2:
             st.subheader(bio['name'])
@@ -121,7 +123,7 @@ if not df_raw.empty:
         options_list = img_opts['track_name'].unique().tolist()
         choice = st.selectbox("Dernier écouté :", options_list, index=0)
         url = img_opts[img_opts['track_name'] == choice]['album_cover_url'].values[0]
-        st.image(url if url else "https://www.scdn.co/scannables/svg/only-logo/255/white", use_container_width=True)
+        st.image(url if url else "https://www.scdn.co/scannables/svg/only-logo/255/white", width="stretch")
         
         st.divider()
         st.subheader("📈 Stats")
@@ -139,14 +141,14 @@ if not df_raw.empty:
             fig_a = px.bar(top_a, y='artist_name', x='Écoutes', orientation='h', color_discrete_sequence=['#1DB954'], custom_data=['album_cover_url'])
             fig_a.update_traces(hovertemplate="<b>%{y}</b><br>Écoutes: %{x}<br><img src='%{customdata[0]}' width='100'>")
             fig_a.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320, xaxis_title=None, yaxis_title=None)
-            st.plotly_chart(fig_a, use_container_width=True)
+            st.plotly_chart(fig_a, width="stretch")
         with c2:
             st.subheader("🔁 Top Titres")
             top_t = df.groupby('track_name').agg({'played_at': 'count', 'artist_name': 'first', 'album_cover_url': 'first'}).reset_index().rename(columns={'played_at': 'Écoutes'}).sort_values('Écoutes', ascending=True).tail(8)
             fig_t = px.bar(top_t, y='track_name', x='Écoutes', orientation='h', color_discrete_sequence=['#1DB954'], custom_data=['artist_name', 'album_cover_url'])
             fig_t.update_traces(hovertemplate="<b>%{y}</b><br>Écoutes: %{x}<br><img src='%{customdata[1]}' width='100'>")
             fig_t.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320, xaxis_title=None, yaxis_title=None)
-            st.plotly_chart(fig_t, use_container_width=True)
+            st.plotly_chart(fig_t, width="stretch")
 
         # --- NOUVEAU : GRAPH DES GENRES (Réintégré) ---
         st.divider()
@@ -161,7 +163,7 @@ if not df_raw.empty:
             genre_counts.columns = ['Genre', 'Count']
             fig_g = px.bar(genre_counts, x='Count', y='Genre', orientation='h', color_discrete_sequence=['#1DB954'])
             fig_g.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=350, xaxis_title=None, yaxis_title=None)
-            st.plotly_chart(fig_g, use_container_width=True)
+            st.plotly_chart(fig_g, width="stretch")
         else:
             st.info("Synchronise tes données pour voir tes genres préférés !")
 

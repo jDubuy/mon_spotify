@@ -5,12 +5,14 @@ import fetch_history
 
 def git_push_db():
     try:
-        subprocess.run(["git", "add", "spotify_data.db"], check=True)
+        subprocess.run(["git", "add", "spotify_data.db"], check=True, timeout=30)
         maintenant = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         message = f"Mise à jour automatique de la DB : {maintenant}"
-        subprocess.run(["git", "commit", "-m", message], check=True)
-        subprocess.run(["git", "push"], check=True)
+        subprocess.run(["git", "commit", "-m", message], check=True, timeout=30)
+        subprocess.run(["git", "push"], check=True, timeout=60)
         print("🚀 Base de données synchronisée sur GitHub !")
+    except subprocess.TimeoutExpired:
+        print("⏳ Git push a expiré (authentification requise ?). Lance un git push manuel.")
     except subprocess.CalledProcessError:
         print("ℹ️ Rien à mettre à jour sur GitHub (pas de nouveaux morceaux).")
     except Exception as e:
