@@ -127,7 +127,9 @@ if not df_raw.empty:
         
         st.divider()
         st.subheader("📈 Stats")
-        st.metric("🎵 Titres", len(df))
+        st.metric("🎵 Titres (Total)", len(df))
+        st.metric("🎶 Titres différents", df['track_name'].nunique())
+        
         st.metric("🎤 Artistes", df['artist_name'].nunique())
         st.metric("⏱️ Heures Total", f"{df['duration_ms'].sum()/(3600000):.1f}")
         st.metric("⏳ Durée Moyenne", f"{avg_min}:{avg_sec:02d}")
@@ -150,7 +152,7 @@ if not df_raw.empty:
             fig_t.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320, xaxis_title=None, yaxis_title=None)
             st.plotly_chart(fig_t, width="stretch")
 
-        # --- NOUVEAU : GRAPH DES GENRES (Réintégré) ---
+        # Graphique des genres
         st.divider()
         st.subheader("🎸 Genres les plus écoutés")
         all_genres = []
@@ -167,7 +169,7 @@ if not df_raw.empty:
         else:
             st.info("Synchronise tes données pour voir tes genres préférés !")
 
-    # --- HISTORIQUE DÉTAILLÉ (BIG COVERS) ---
+    # --- HISTORIQUE DÉTAILLÉ ---
     st.divider()
     st.subheader("📜 Historique Récent")
     recent = df.sort_values('played_at', ascending=False).head(15)
@@ -190,7 +192,6 @@ if not df_raw.empty:
                     show_artist_card(nom_art, df_raw)
                 st.markdown('</div>', unsafe_allow_html=True)
                 
-                # Formatage durée m:ss pour chaque ligne
                 d = row.get('duration_ms', 0)
                 st.markdown(f"<div class='meta-small'>💿 {row.get('album_name','-')} • 📅 {row.get('release_date','-')} • ⏱️ {int(d//60000)}:{int((d%60000)//1000):02d}</div>", unsafe_allow_html=True)
             
