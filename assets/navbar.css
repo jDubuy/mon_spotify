@@ -1,0 +1,65 @@
+/* assets/navbar.css */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 15px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px); /* Effet de flou derrière la barre */
+}
+
+.nav-logo {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #1DB954;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: #1DB954;
+}
+
+.nav-links a.active {
+    color: #1DB954;
+    border-bottom: 2px solid #1DB954;
+    padding-bottom: 5px;
+}
+
+/* On adapte le bouton de synchro pour la navbar */
+.nav-sync-btn {
+    background: #1DB954;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: transform 0.2s;
+}
+
+.nav-sync-btn:hover {
+    transform: scale(1.05);
+    background: #1ed760;
+}

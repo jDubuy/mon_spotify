@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mur de Pochettes - Spotify Pro</title>
+    
+    <link rel="stylesheet" href="assets/mosaic-style.css">
+</head>
+<body>
+
+    <link rel="stylesheet" href="assets/navbar.css">
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo">🟢 Spotify Pro</a>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="mosaic.html" class="active">Mosaïque</a>
+            <button class="nav-sync-btn" onclick="syncData()">📡 Synchro</button>
+        </div>
+    </nav>
+    
+    <h1>🖼️ Mur de Pochettes</h1>
+    <p class="description">Découvrez la mosaïque visuelle de vos écoutes récentes.</p>
+    
+    <div id="mosaic-grid" class="mosaic-grid">
+        <p>Chargement de votre collection...</p>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/api";
+        const DEFAULT_LOGO = "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png";
+
+        async function loadMosaic() {
+            try {
+                const res = await fetch(`${API_URL}/covers`);
+                const covers = await res.json();
+                const grid = document.getElementById('mosaic-grid');
+                
+                if (covers.length === 0) {
+                    grid.innerHTML = "<p>Aucune pochette à afficher. Synchronisez vos données.</p>";
+                    return;
+                }
+
+                grid.innerHTML = covers.map(album => `
+                    <div class="mosaic-item">
+                        <img src="${album.album_cover_url || DEFAULT_LOGO}" alt="${album.album_name}" loading="lazy">
+                        <div class="album-overlay">
+                            <span class="album-name">${album.album_name}</span>
+                            <span class="artist-name">${album.artist_name}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Erreur mosaïque:", e);
+                document.getElementById('mosaic-grid').innerHTML = "<p style='color:red;'>Erreur de connexion avec l'API.</p>";
+            }
+        }
+
+        // Lancement immédiat
+        loadMosaic();
+    </script>
+</body>
+</html>

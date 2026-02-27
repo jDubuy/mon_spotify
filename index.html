@@ -9,10 +9,16 @@
 </head>
 <body>
 
-    <header>
-        <h1>🟢 Mon Dashboard Spotify</h1>
-        <button onclick="syncData()">📡 Synchroniser Spotify</button>
-    </header>
+    <link rel="stylesheet" href="assets/navbar.css">
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo">🟢 Spotify Pro</a>
+        <div class="nav-links">
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="mosaic.html">Mosaïque</a>
+            <button class="nav-sync-btn" onclick="syncData()">📡 Synchro</button>
+        </div>
+    </nav>
 
     <section class="podium-section">
         <div class="podium-group">
@@ -39,7 +45,9 @@
         </div>
     </div>
 
+
     <hr>
+
 
     <section>
         <h2>📜 Écoutes Récentes</h2>
