@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Dashboard Pro</title>
+    
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>🟢 Mon Dashboard Spotify</h1>
+        <button onclick="syncData()">📡 Synchroniser Spotify</button>
+    </header>
+
+    <section class="podium-section">
+        <div class="podium-group">
+            <h2>🏆 Top Artistes</h2>
+            <div id="artists-podium" class="podium-container">
+                </div>
+        </div>
+        
+        <div class="podium-group">
+            <h2>🎵 Top Titres</h2>
+            <div id="tracks-podium" class="podium-container">
+                </div>
+        </div>
+    </section>
+
+    <div class="stats-container">
+        <div class="card">
+            <h3>Titres Écoutés</h3>
+            <p id="total-tracks">0</p>
+        </div>
+        <div class="card">
+            <h3>Artistes Uniques</h3>
+            <p id="unique-artists">0</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <section>
+        <h2>📜 Écoutes Récentes</h2>
+        <div id="history-list">
+            <p>Chargement de l'historique en cours...</p>
+        </div>
+    </section>
+
+    <script src="assets/script.js"></script>
+</body>
+</html>

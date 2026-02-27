@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import requests
 import os
 import logging
 from dotenv import load_dotenv
@@ -17,7 +16,7 @@ st.set_page_config(page_title="Spotify Dashboard Pro", page_icon="🟢", layout=
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- CHARGEMENT DU STYLE EXTERNE ---
+# --- CHARGEMENT DU STYLE ---
 def load_css(file_path):
     """Charge le design depuis le fichier CSS externe"""
     if os.path.exists(file_path):
@@ -32,8 +31,11 @@ load_css("assets/style.css")
 if 'history_limit' not in st.session_state:
     st.session_state.history_limit = 20
 
-# Logo Spotify officiel pour les images manquantes
+# Constantes visuelles
 SPOTIFY_LOGO = "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png"
+SPOTIFY_GREEN = "#1DB954"
+# Échelle de vert "GitHub Style"
+GREEN_SCALE = ['#121212', '#0e4429', '#006d32', '#26a641', '#39d353']
 
 # --- SERVICES DE DONNÉES ---
 
@@ -58,10 +60,7 @@ def get_artist_bio(artist_name):
     try:
         res = requests.get(url, params=params, timeout=5).json()
         return res.get('artist')
-    except Exception:
-        return None
-
-# --- COMPOSANTS INTERFACE (DIALOGS) ---
+    except: return None
 
 @st.dialog("Fiche de l'Artiste")
 def show_artist_card(artist_name, df_full):
@@ -94,28 +93,22 @@ with st.sidebar:
     filtre = st.selectbox(
         "Période :", 
         ["12h", "3 jours", "7 jours", "1 mois", "Tout"], 
-        index=2, 
+        index=4, 
         on_change=lambda: st.session_state.update(history_limit=20)
     )
     st.divider()
     batch_size = st.slider("Quantité par chargement", 10, 100, 20)
 
 # Onglets de navigation
-tab_dash, tab_wall, tab_recs = st.tabs(["📊 Dashboard", "🖼️ Mosaïque", "🎯 Recommandations"])
+tab_dash, tab_habits, tab_wall, tab_recs = st.tabs(["📊 Dashboard", "📅 Habitudes", "🖼️ Mosaïque", "🎯 Recommandations"])
 
 if not df_raw.empty:
-    # Filtrage temporel
     now = pd.Timestamp.now(tz='Europe/Paris')
-    d_map = {
-        "12h": now - timedelta(hours=12), 
-        "3 jours": now - timedelta(days=3), 
-        "7 jours": now - timedelta(days=7), 
-        "1 mois": now - timedelta(days=30), 
-        "Tout": df_raw['played_at'].min()
-    }
+    d_map = {"12h": now - timedelta(hours=12), "3 jours": now - timedelta(days=3), 
+             "7 jours": now - timedelta(days=7), "1 mois": now - timedelta(days=30), "Tout": df_raw['played_at'].min()}
     df = df_raw[df_raw['played_at'] >= d_map[filtre]].copy()
 
-    # Onglet 1 : Dashboard
+    # --- ONGLET 1 : DASHBOARD ---
     with tab_dash:
         col_kpi, col_graphs = st.columns([1, 3], gap="large")
         with col_kpi:
@@ -123,11 +116,10 @@ if not df_raw.empty:
             saved_url = get_setting('selected_pochette')
             if not saved_url:
                 saved_url = df_raw.sort_values('played_at', ascending=False).iloc[0]['album_cover_url']
-            st.image(saved_url if saved_url and str(saved_url).strip() != "" else SPOTIFY_LOGO, width='stretch')
+            st.image(saved_url if saved_url else SPOTIFY_LOGO, width='stretch')
             
             st.divider()
             st.metric("🎵 Titres (Total)", len(df))
-            st.metric("🎶 Titres Distincts", df['track_name'].nunique())
             st.metric("🎤 Artistes", df['artist_name'].nunique())
             avg = df['duration_ms'].mean() if not df.empty else 0
             st.metric("⏳ Durée Moyenne", f"{int(avg//60000)}:{int((avg%60000)//1000):02d}")
@@ -136,48 +128,59 @@ if not df_raw.empty:
             c1, c2 = st.columns(2)
             with c1:
                 st.subheader("🏆 Top Artistes")
-                top_a = df.groupby('artist_name').size().reset_index(name='Écoutes').sort_values('Écoutes', ascending=True).tail(8)
-                fig_a = px.bar(top_a, y='artist_name', x='Écoutes', orientation='h', color_discrete_sequence=['#1DB954'])
-                fig_a.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320)
+                top_a = df.groupby('artist_name').size().reset_index(name='c').sort_values('c').tail(8)
+                fig_a = px.bar(top_a, y='artist_name', x='c', orientation='h', color_discrete_sequence=[SPOTIFY_GREEN])
+                fig_a.update_traces(hovertemplate="<b>%{y}</b><br>Écoutes : %{x}<extra></extra>")
+                fig_a.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320, xaxis_title=None, yaxis_title=None)
                 st.plotly_chart(fig_a, width='stretch')
             with c2:
                 st.subheader("🔁 Top Titres")
-                top_t = df.groupby('track_name').size().reset_index(name='Écoutes').sort_values('Écoutes', ascending=True).tail(8)
-                fig_t = px.bar(top_t, y='track_name', x='Écoutes', orientation='h', color_discrete_sequence=['#1DB954'])
-                fig_t.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320)
+                top_t = df.groupby('track_name').size().reset_index(name='c').sort_values('c').tail(8)
+                fig_t = px.bar(top_t, y='track_name', x='c', orientation='h', color_discrete_sequence=[SPOTIFY_GREEN])
+                fig_t.update_traces(hovertemplate="<b>%{y}</b><br>Écoutes : %{x}<extra></extra>")
+                fig_t.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", height=320, xaxis_title=None, yaxis_title=None)
                 st.plotly_chart(fig_t, width='stretch')
 
-        st.divider()
-        st.subheader("📜 Historique")
-        search = st.text_input("🔍 Rechercher un titre ou un artiste...")
-        df_f = df.copy()
-        if search:
-            df_f = df[df['track_name'].str.contains(search, case=False, na=False) | 
-                     df['artist_name'].str.contains(search, case=False, na=False)]
-        
-        for _, row in df_f.sort_values('played_at', ascending=False).head(st.session_state.history_limit).iterrows():
-            with st.container():
-                st.markdown('<div class="track-card">', unsafe_allow_html=True)
-                ci, ctx = st.columns([1.5, 8.5])
-                with ci:
-                    st.image(row.get('album_cover_url') if row.get('album_cover_url') else SPOTIFY_LOGO, width=100)
-                with ctx:
-                    st.markdown(f"<h3 style='margin:0;'>{row['track_name']}</h3>", unsafe_allow_html=True)
-                    art = row['artist_name'].split(',')[0]
-                    st.markdown('<div class="artist-link-clean">', unsafe_allow_html=True)
-                    if st.button(art, key=f"dash_{row['played_at']}"): show_artist_card(art, df_raw)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-        
-        if len(df_f) > st.session_state.history_limit:
-            if st.button(f"➕ Charger {batch_size} titres de plus", width='stretch'):
-                st.session_state.history_limit += batch_size
-                st.rerun()
+    # --- ONGLET 2 : HABITUDES (Heatmap & Légende) ---
+    with tab_habits:
+        st.title("📅 Analyse Temporelle")
+        col_group, col_leg = st.columns([2, 1])
+        with col_group:
+            mode = st.radio("Vue :", ["Heures / Jours", "Semaines / Jours"], horizontal=True)
+        with col_leg:
+            # Légende style GitHub
+            st.markdown(f"""
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 5px; font-size: 0.8rem; color: #b3b3b3; margin-top: 10px;">
+                    <span>Moins</span>
+                    <div style="width: 12px; height: 12px; background-color: {GREEN_SCALE[0]}; border: 1px solid #333;"></div>
+                    <div style="width: 12px; height: 12px; background-color: {GREEN_SCALE[1]}; border: 1px solid #333;"></div>
+                    <div style="width: 12px; height: 12px; background-color: {GREEN_SCALE[2]}; border: 1px solid #333;"></div>
+                    <div style="width: 12px; height: 12px; background-color: {GREEN_SCALE[3]}; border: 1px solid #333;"></div>
+                    <div style="width: 12px; height: 12px; background-color: {GREEN_SCALE[4]}; border: 1px solid #333;"></div>
+                    <span>Plus</span>
+                </div>
+            """, unsafe_allow_html=True)
 
-    # Onglet 2 : Mur de pochettes
+        h_df = df.copy()
+        jours_ordre = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+        jours_map = {'Monday': 'Lun', 'Tuesday': 'Mar', 'Wednesday': 'Mer', 'Thursday': 'Jeu', 'Friday': 'Ven', 'Saturday': 'Sam', 'Sunday': 'Dim'}
+        h_df['Jour'] = h_df['played_at'].dt.day_name().map(jours_map)
+        
+        if mode == "Heures / Jours":
+            h_df['Heure'] = h_df['played_at'].dt.hour
+            fig = px.density_heatmap(h_df, x="Heure", y="Jour", nbinsx=24, color_continuous_scale=GREEN_SCALE, category_orders={'Jour': jours_ordre})
+        else:
+            h_df['Semaine'] = h_df['played_at'].dt.isocalendar().week
+            fig = px.density_heatmap(h_df, x="Semaine", y="Jour", color_continuous_scale=GREEN_SCALE, category_orders={'Jour': jours_ordre})
+
+        fig.update_traces(hovertemplate="<b>%{y}</b><br>Temps : %{x}<br>Intensité : %{z} titres<extra></extra>")
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white", coloraxis_showscale=False, height=400, margin=dict(l=0, r=0, t=20, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # --- ONGLET 3 : MOSAÏQUE ---
     with tab_wall:
         st.title("🖼️ Mur de Pochettes")
-        ac = df_raw[df_raw['album_cover_url'].str.strip() != ""].drop_duplicates('album_cover_url').sort_values('played_at', ascending=False)
+        ac = df_raw.drop_duplicates('album_cover_url').sort_values('played_at', ascending=False)
         cols_per_row = 8
         for i in range(0, len(ac), cols_per_row):
             row_data = ac.iloc[i : i + cols_per_row]
@@ -185,34 +188,25 @@ if not df_raw.empty:
             for j, (_, song) in enumerate(row_data.iterrows()):
                 with cols[j]:
                     st.markdown(f'<div class="mosaic-container"><img src="{song["album_cover_url"]}" style="width:100%;"><div class="mosaic-overlay"><span class="artist-name-hover">{song["artist_name"].split(",")[0]}</span></div></div>', unsafe_allow_html=True)
-                    if st.button("Sél.", key=f"wall_{song['album_cover_url']}", width='stretch'):
+                    if st.button("Sél.", key=f"w_{song['album_cover_url']}", width='stretch'):
                         save_setting('selected_pochette', song['album_cover_url'])
                         st.rerun()
 
-    # Onglet 3 : Recommandations
+    # --- ONGLET 4 : RECOMMANDATIONS ---
     with tab_recs:
         st.title("🎯 Recommandations")
-        if st.button("🔄 Rafraîchir les suggestions"): st.cache_data.clear()
-        
+        if st.button("🔄 Rafraîchir"): st.cache_data.clear()
         sp = fetch_history.get_spotify_client()
-        recommendations = fetch_history.get_recommendations(sp, limit=12)
-        if recommendations:
+        recs = fetch_history.get_recommendations(sp, limit=12)
+        if recs:
             cols = st.columns(3)
-            for idx, track in enumerate(recommendations):
-                with cols[idx % 3]:
-                    st.markdown(f"""
-                        <div class="track-card">
-                            <img src="{track['cover']}" style="width:100%; border-radius: 10px; margin-bottom:10px;">
-                            <h4 style="margin:0; color:#1DB954;">{track['name']}</h4>
-                            <p style="margin:0; color:#B3B3B3;">{track['artist']}</p>
-                            <a href="{track['url']}" target="_blank">
-                                <button style="width:100%; background:#1DB954; color:white; border:none; padding:8px; border-radius:20px; cursor:pointer; margin-top:10px;">
-                                    🎧 Écouter sur Spotify
-                                </button>
-                            </a>
-                        </div>
-                    """, unsafe_allow_html=True)
-        else:
-            st.info("Écoutez encore un peu de musique pour générer des suggestions !")
+            for i, t in enumerate(recs):
+                with cols[i % 3]:
+                    st.markdown(f"""<div class="track-card">
+                        <img src="{t['cover'] if t['cover'] else SPOTIFY_LOGO}" style="width:100%; border-radius: 10px; margin-bottom: 10px;">
+                        <h4 style="margin:0; color:{SPOTIFY_GREEN};">{t['name']}</h4>
+                        <p style="margin:0; color:#B3B3B3;">{t['artist']}</p>
+                        <a href="{t['url']}" target="_blank"><button style="width:100%; background:{SPOTIFY_GREEN}; color:white; border:none; padding:8px; border-radius:20px; cursor:pointer; margin-top:10px;">🎧 Spotify</button></a>
+                    </div>""", unsafe_allow_html=True)
 else:
-    st.info("Veuillez lancer une synchronisation dans la barre latérale.")
+    st.info("Aucune donnée. Lancez une synchronisation !")

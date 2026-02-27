@@ -1,5 +1,5 @@
-# utils/database.py
 import sqlite3
+import pandas as pd
 from contextlib import contextmanager
 
 DB_PATH = 'spotify_data.db'
@@ -23,6 +23,7 @@ def get_setting(key, default=None):
 def save_setting(key, value):
     """Enregistre un réglage dans la table settings"""
     with get_db() as conn:
+        conn.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
         conn.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
         conn.commit()
 
@@ -37,5 +38,4 @@ def load_full_history():
         JOIN albums alb ON t.album_name = alb.album_name AND t.artist_name = alb.artist_name
     '''
     with get_db() as conn:
-        import pandas as pd
         return pd.read_sql_query(query, conn)
