@@ -1,4 +1,3 @@
-import sqlite3
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -8,16 +7,17 @@ import logging
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from bot import fetch_history
+from utils.database import get_setting, save_setting, load_full_history
 
 # --- CONFIGURATION INITIALE ---
 load_dotenv()
 st.set_page_config(page_title="Spotify Dashboard Pro", page_icon="🟢", layout="wide")
 
-# Configuration du logging pour suivre les événements de l'app
+# Configuration du logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- CHARGEMENT DU STYLE ---
+# --- CHARGEMENT DU STYLE EXTERNE ---
 def load_css(file_path):
     """Charge le design depuis le fichier CSS externe"""
     if os.path.exists(file_path):
@@ -37,48 +37,17 @@ SPOTIFY_LOGO = "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_
 
 # --- SERVICES DE DONNÉES ---
 
-def get_db_setting(key, default=None):
-    """Récupère un réglage (comme la vitrine) depuis la DB"""
-    conn = sqlite3.connect('spotify_data.db', timeout=20)
-    cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
-    cursor.execute("SELECT value FROM settings WHERE key = ?", (key,))
-    res = cursor.fetchone()
-    conn.close()
-    return res[0] if res else default
-
-def save_db_setting(key, value):
-    """Enregistre un réglage utilisateur en base"""
-    conn = sqlite3.connect('spotify_data.db', timeout=20)
-    cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
-    cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
-    conn.commit()
-    conn.close()
-
 @st.cache_data
 def load_data():
-    """Charge l'historique avec les jointures multi-tables"""
-    conn = sqlite3.connect('spotify_data.db', timeout=20)
-    query = '''
-        SELECT h.played_at, t.track_name, t.artist_name, t.duration_ms, 
-               alb.album_cover_url, art.artist_genres, alb.album_name, alb.release_date
-        FROM history h
-        JOIN tracks t ON h.track_id = t.track_id
-        JOIN artists art ON t.artist_name = art.artist_name
-        JOIN albums alb ON t.album_name = alb.album_name AND t.artist_name = alb.artist_name
-    '''
+    """Charge l'historique en utilisant l'utilitaire de base de données"""
     try:
-        df = pd.read_sql_query(query, conn)
+        df = load_full_history()
+        if not df.empty:
+            df['played_at'] = pd.to_datetime(df['played_at']).dt.tz_convert('Europe/Paris')
+        return df
     except Exception as e:
         logger.error(f"Erreur lors du chargement des données : {e}")
-        df = pd.DataFrame()
-    finally:
-        conn.close()
-    
-    if not df.empty:
-        df['played_at'] = pd.to_datetime(df['played_at']).dt.tz_convert('Europe/Paris')
-    return df
+        return pd.DataFrame()
 
 def get_artist_bio(artist_name):
     """Cherche la biographie de l'artiste sur Last.fm"""
@@ -89,7 +58,8 @@ def get_artist_bio(artist_name):
     try:
         res = requests.get(url, params=params, timeout=5).json()
         return res.get('artist')
-    except: return None
+    except Exception:
+        return None
 
 # --- COMPOSANTS INTERFACE (DIALOGS) ---
 
@@ -150,7 +120,7 @@ if not df_raw.empty:
         col_kpi, col_graphs = st.columns([1, 3], gap="large")
         with col_kpi:
             st.subheader("🖼️ Ma Vitrine")
-            saved_url = get_db_setting('selected_pochette')
+            saved_url = get_setting('selected_pochette')
             if not saved_url:
                 saved_url = df_raw.sort_values('played_at', ascending=False).iloc[0]['album_cover_url']
             st.image(saved_url if saved_url and str(saved_url).strip() != "" else SPOTIFY_LOGO, width='stretch')
@@ -216,7 +186,7 @@ if not df_raw.empty:
                 with cols[j]:
                     st.markdown(f'<div class="mosaic-container"><img src="{song["album_cover_url"]}" style="width:100%;"><div class="mosaic-overlay"><span class="artist-name-hover">{song["artist_name"].split(",")[0]}</span></div></div>', unsafe_allow_html=True)
                     if st.button("Sél.", key=f"wall_{song['album_cover_url']}", width='stretch'):
-                        save_db_setting('selected_pochette', song['album_cover_url'])
+                        save_setting('selected_pochette', song['album_cover_url'])
                         st.rerun()
 
     # Onglet 3 : Recommandations

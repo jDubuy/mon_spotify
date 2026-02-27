@@ -76,3 +76,53 @@ Inspectez rapidement les 10 dernières entrées de votre base de données :
 python data_base_tools/check_db.py
 ```
 
+##  Installation et Configuration
+
+### 1. Prérequis
+Installez les bibliothèques requises :
+
+\\\powershell
+pip install -r requirements.txt
+\\\
+
+### 2. Configuration API (.env)
+Créez un fichier \.env\ à la racine avec vos identifiants :
+
+\\\
+SPOTIPY_CLIENT_ID='votre_id'
+SPOTIPY_CLIENT_SECRET='votre_secret'
+# Note : Utilisez 127.0.0.1 au lieu de localhost pour la stabilité
+SPOTIPY_REDIRECT_URI='https://127.0.0.1:8888/callback'
+
+LASTFM_API_KEY='votre_clé_api'
+\\\
+
+### 3. Configuration Spotify for Developers
+Dans les réglages de votre application sur le dashboard Spotify :
+
+- Ajoutez l'URI de redirection : \https://127.0.0.1:8888/callback\.
+- Assurez-vous que le protocole (HTTP/HTTPS) correspond exactement à votre fichier \.env\.
+
+##  Utilisation
+
+### Lancer le Dashboard
+\\\powershell
+streamlit run app.py
+\\\
+
+### Démarrer la collecte automatique
+\\\powershell
+python bot/auto_fetch.py
+\\\
+
+##  Architecture des Données
+Le projet utilise une base SQLite structurée pour optimiser les performances :
+
+- **history** : Journal des écoutes (timestamp, track_id).
+- **tracks** : Détails des morceaux.
+- **artists** : Informations sur les artistes et genres.
+- **albums** : Métadonnées des albums et URLs des pochettes.
+- **settings** : Stockage des préférences utilisateur (ex: pochette de vitrine choisie).
+
+##  Personnalisation
+Le style visuel est géré de manière centralisée dans \ssets/style.css\. Vous pouvez y modifier les couleurs (vert Spotify #1DB954), les animations de survol des images ou le design des cartes de titres.
