@@ -4,8 +4,14 @@ import pandas as pd
 def check_database():
     conn = sqlite3.connect('spotify_data.db')
     
-    # On demande la colonne 'popularity' au lieu de 'genres'
-    query = "SELECT played_at, artist_name, track_name, popularity FROM history ORDER BY played_at DESC LIMIT 10"
+    # Jointure avec la table tracks pour récupérer les infos des morceaux
+    query = """
+    SELECT h.played_at, t.track_name, t.artist_name, t.duration_ms 
+    FROM history h
+    JOIN tracks t ON h.track_id = t.track_id
+    ORDER BY h.played_at DESC 
+    LIMIT 10
+    """
     df = pd.read_sql_query(query, conn)
     
     conn.close()
