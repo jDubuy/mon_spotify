@@ -125,4 +125,4 @@ Le projet utilise une base SQLite structurée pour optimiser les performances :
 - **settings** : Stockage des préférences utilisateur (ex: pochette de vitrine choisie).
 
 ##  Personnalisation
-Le style visuel est géré de manière centralisée dans \ssets/style.css\. Vous pouvez y modifier les couleurs (vert Spotify #1DB954), les animations de survol des images ou le design des cartes de titres.
+Le style visuel est géré de manière centralisée dans /assets/style.css\. Vous pouvez y modifier les couleurs (vert Spotify #1DB954), les animations de survol des images ou le design des cartes de titres.
