@@ -28,11 +28,24 @@ Ce projet est une application de **Data Visualization** personnelle permettant d
 
 ## 🛠️ Installation et Configuration
 
+### ✅ Prérequis Obligatoires
+
+#### Version de Python
+- **Python 3.10 minimum** (recommandé : 3.11+)
+- Vérifiez votre version : `py --version`
+
+#### Fichiers Obligatoires (avant toute utilisation)
+```
+✓ requirements.txt       → Liste des dépendances
+✓ .env                   → Identifiants API Spotify
+✓ spotify_data.db        → Base de données (créée à l'installation)
+```
+
 ### 1. Installation des dépendances
 Installez les bibliothèques nécessaires via le fichier requirements :
 
 ```powershell
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 ### 2. Configuration API Spotify
@@ -50,30 +63,60 @@ LASTFM_API_KEY='votre_clé_API'
 Exécutez le script pour créer la table history dans SQLite :
 
 ```powershell
-python data_base_tools/db.py
+py data_base_tools/db.py
 ```
 
 ## 📈 Commandes d'utilisation
 
-### Lancer la collecte automatique (Bot)
+### 🎯 Deux modes de lancement disponibles
+
+#### Mode 1 : Dashboard Streamlit (Recommandé pour l'analyse)
+Le dashboard Streamlit offre une interface riche avec graphiques interactifs.
+
+```powershell
+py -m streamlit run app.py
+```
+
+**Accès** : http://localhost:8501
+
+**Avantages** :
+- Interface Rich avec graphiques Plotly
+- Rechargement automatique en temps réel
+- Meilleur pour l'analyse approfondie
+
+---
+
+#### Mode 2 : Frontend HTML + API FastAPI (Recommandé pour le déploiement)
+Combine un frontend léger (index.html) avec une API backend FastAPI.
+
+**Étape 1 : Démarrer le serveur API**
+```powershell
+py api.py
+```
+
+**Étape 2 : Accéder au frontend**
+Ouvrez votre navigateur et allez à : http://127.0.0.1:8000
+
+**Avantages** :
+- Architecture modulaire (Frontend/Backend séparé)
+- Plus léger et rapide
+- Idéal pour le déploiement en production
+- Backend API réutilisable
+
+---
+
+### 🤖 Lancer la collecte automatique (Bot)
 Démarre le robot qui récupère vos écoutes et met à jour GitHub toutes les 5 minutes :
 
 ```powershell
-python bot/auto_fetch.py
+py bot/auto_fetch.py
 ```
 
-### Lancer le Dashboard
-Pour visualiser vos statistiques en temps réel sur votre navigateur :
-
-```powershell
-streamlit run app.py
-```
-
-### Vérifier le contenu de la base
+### 🔍 Vérifier le contenu de la base
 Inspectez rapidement les 10 dernières entrées de votre base de données :
 
 ```powershell
-python data_base_tools/check_db.py
+py data_base_tools/check_db.py
 ```
 
 ##  Installation et Configuration
@@ -125,4 +168,4 @@ Le projet utilise une base SQLite structurée pour optimiser les performances :
 - **settings** : Stockage des préférences utilisateur (ex: pochette de vitrine choisie).
 
 ##  Personnalisation
-Le style visuel est géré de manière centralisée dans /assets/style.css\. Vous pouvez y modifier les couleurs (vert Spotify #1DB954), les animations de survol des images ou le design des cartes de titres.
+Le style visuel est géré de manière centralisée dans `assets/style.css`. Vous pouvez y modifier les couleurs (vert Spotify #1DB954), les animations de survol des images ou le design des cartes de titres.
