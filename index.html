@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Dashboard Pro</title>
-    
     <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/navbar.css">
 </head>
 <body>
-
-    <link rel="stylesheet" href="assets/navbar.css">
 
     <nav class="navbar">
         <a href="index.html" class="nav-logo">🟢 Spotify Pro</a>
@@ -20,41 +18,46 @@
         </div>
     </nav>
 
-    <section class="podium-section">
-        <div class="podium-group">
-            <h2>🏆 Top Artistes</h2>
-            <div id="artists-podium" class="podium-container">
-                </div>
-        </div>
-        
-        <div class="podium-group">
-            <h2>🎵 Top Titres</h2>
-            <div id="tracks-podium" class="podium-container">
-                </div>
-        </div>
-    </section>
+    <div class="main-content">
+        <section class="podium-section">
+            <div class="podium-group">
+                <h2>🏆 Top Artistes (Perso)</h2>
+                <div id="artists-podium" class="podium-container"></div>
+            </div>
+            <div class="podium-group">
+                <h2>🎵 Top Titres (Perso)</h2>
+                <div id="tracks-podium" class="podium-container"></div>
+            </div>
+        </section>
 
-    <div class="stats-container">
-        <div class="card">
-            <h3>Titres Écoutés</h3>
-            <p id="total-tracks">0</p>
+        <div class="stats-container">
+            <div class="card"><h3>Titres Écoutés</h3><p id="total-tracks">0</p></div>
+            <div class="card"><h3>Artistes Uniques</h3><p id="unique-artists">0</p></div>
         </div>
-        <div class="card">
-            <h3>Artistes Uniques</h3>
-            <p id="unique-artists">0</p>
-        </div>
+
+        <hr>
+
+        <section class="archives-section">
+            <h2>🏛️ Archives Spotify (All Time)</h2>
+            <div class="archives-container">
+                <div class="archive-column">
+                    <h3>Top Artistes Global</h3>
+                    <div id="official-artists-list" class="official-list"></div>
+                </div>
+                <div class="archive-column">
+                    <h3>Top Titres Global</h3>
+                    <div id="official-tracks-list" class="official-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>📜 Écoutes Récentes</h2>
+            <div id="history-list"></div>
+        </section>
     </div>
-
-
-    <hr>
-
-
-    <section>
-        <h2>📜 Écoutes Récentes</h2>
-        <div id="history-list">
-            <p>Chargement de l'historique en cours...</p>
-        </div>
-    </section>
 
     <script src="assets/script.js"></script>
 </body>

@@ -5,16 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
-# Import de tes modules personnalisés
-from utils.database import load_full_history, get_setting, save_setting
-from bot import fetch_history
+# Import de tes modules
+from utils.database import load_full_history
+from bot.fetch_history import get_spotify_client
 
-# Chargement des variables d'environnement
 load_dotenv()
 
-app = FastAPI(title="Spotify Hybrid API")
+app = FastAPI(title="Spotify Hybrid Dashboard")
 
-# Configuration CORS pour permettre au Frontend de communiquer avec le Backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,79 +20,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- ROUTES API ---
+# --- ROUTES API (BASÉES SUR SQLITE) ---
 
 @app.get("/api/stats")
 def get_stats():
-    """Retourne les chiffres clés du dashboard"""
     df = load_full_history()
-    if df.empty:
-        return {"total_tracks": 0, "unique_artists": 0}
-    
-    return {
-        "total_tracks": len(df),
-        "unique_artists": df['artist_name'].nunique()
-    }
+    if df.empty: return {"total_tracks": 0, "unique_artists": 0}
+    return {"total_tracks": len(df), "unique_artists": df['artist_name'].nunique()}
+
+@app.get("/api/top-artists")
+def get_sqlite_top_artists(limit: int = 3):
+    df = load_full_history()
+    if df.empty: return []
+    top = df.groupby('artist_name').agg({'played_at': 'count', 'album_cover_url': 'first'}).reset_index()
+    return top.sort_values('played_at', ascending=False).head(limit).to_dict(orient="records")
+
+@app.get("/api/top-tracks")
+def get_sqlite_top_tracks(limit: int = 3):
+    df = load_full_history()
+    if df.empty: return []
+    top = df.groupby(['track_name', 'artist_name']).agg({'played_at': 'count', 'album_cover_url': 'first'}).reset_index()
+    return top.sort_values('played_at', ascending=False).head(limit).to_dict(orient="records")
 
 @app.get("/api/history")
 def get_history():
-    """Retourne l'historique complet d'écoute"""
     df = load_full_history()
-    if df.empty:
-        return []
-    # Tri par date décroissante
-    df = df.sort_values('played_at', ascending=False)
-    return df.to_dict(orient="records")
+    return df.sort_values('played_at', ascending=False).head(20).to_dict(orient="records") if not df.empty else []
 
-@app.get("/api/top-artists")
-def get_top_artists(limit: int = 3):
-    """Calcule le classement des artistes pour le podium"""
-    df = load_full_history()
-    if df.empty: return []
-    
-    top = df.groupby('artist_name').agg({
-        'played_at': 'count',
-        'album_cover_url': 'first' # Image représentative
-    }).reset_index().rename(columns={'played_at': 'count'})
-    
-    return top.sort_values('count', ascending=False).head(limit).to_dict(orient="records")
+# --- ROUTES API (OFFICIELLES SPOTIFY ALL-TIME) ---
 
-@app.get("/api/top-tracks")
-def get_top_tracks(limit: int = 3):
-    """Calcule le classement des titres pour le podium"""
-    df = load_full_history()
-    if df.empty: return []
-    
-    top = df.groupby(['track_name', 'artist_name']).agg({
-        'played_at': 'count',
-        'album_cover_url': 'first'
-    }).reset_index().rename(columns={'played_at': 'count'})
-    
-    return top.sort_values('count', ascending=False).head(limit).to_dict(orient="records")
+@app.get("/api/official-top-artists")
+def get_official_top_artists(limit: int = 5):
+    sp = get_spotify_client()
+    try:
+        results = sp.current_user_top_artists(limit=limit, time_range='long_term')
+        return [{
+            'name': item['name'],
+            'image': item['images'][0]['url'] if item['images'] else None,
+            'genres': item['genres'][:2]
+        } for item in results['items']]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/covers")
-def get_unique_covers():
-    """Récupère les pochettes uniques pour la page Mosaïque"""
-    df = load_full_history()
-    if df.empty: return []
-    
-    covers = df.drop_duplicates('album_cover_url').sort_values('played_at', ascending=False)
-    return covers[['artist_name', 'album_name', 'album_cover_url']].to_dict(orient="records")
+@app.get("/api/official-top-tracks")
+def get_official_top_tracks(limit: int = 5):
+    sp = get_spotify_client()
+    try:
+        results = sp.current_user_top_tracks(limit=limit, time_range='long_term')
+        return [{
+            'name': item['name'],
+            'artist': item['artists'][0]['name'],
+            'cover': item['album']['images'][0]['url'] if item['album']['images'] else None
+        } for item in results['items']]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sync")
 def trigger_sync():
-    """Déclenche la synchronisation Spotify via ton bot"""
-    try:
-        # Appel de la fonction principale de ton bot
-        added_tracks = fetch_history.main()
-        return {"status": "success", "added": len(added_tracks)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur synchro: {str(e)}")
+    from bot import fetch_history
+    added = fetch_history.main()
+    return {"status": "success", "added": len(added)}
 
-# --- GESTION DES FICHIERS STATIQUES (SITE WEB) ---
-
-# Cette ligne doit impérativement être à la FIN pour ne pas bloquer les routes /api
-# Elle permet de servir index.html, mosaic.html et le dossier assets/
+# Servir les fichiers statiques
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 if __name__ == "__main__":

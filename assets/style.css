@@ -355,3 +355,38 @@ header h1 {
     .podium-section { grid-template-columns: 1fr; }
     .stats-container { flex-direction: column; }
 }
+
+
+.archives-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.archive-column { flex: 1; }
+
+.official-list {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.official-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.official-item img {
+    width: 45px;
+    height: 45px;
+    border-radius: 4px; /* Carré pour albums, on peut mettre 50% pour artistes */
+}
+
+.official-item .rank {
+    font-weight: bold;
+    color: #1DB954;
+    width: 25px;
+}

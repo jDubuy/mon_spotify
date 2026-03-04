@@ -1,4 +1,3 @@
-// assets/script.js
 const API_URL = "http://127.0.0.1:8000/api";
 const DEFAULT_LOGO = "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png";
 
@@ -42,8 +41,6 @@ async function loadHistory() {
     }
 }
 
-// assets/script.js - Version Harmonisée
-
 async function loadPodiums() {
     try {
         const [artistsRes, tracksRes] = await Promise.all([
@@ -54,20 +51,16 @@ async function loadPodiums() {
         const topArtists = await artistsRes.json();
         const topTracks = await tracksRes.json();
 
-        // Fonction utilitaire pour générer le HTML du podium de manière identique
         const generatePodiumHTML = (data, isArtist) => {
             if (data.length === 0) return "<p style='color: #777;'>Aucune donnée</p>";
 
-            // Ordre : 2ème (index 1), 1er (index 0), 3ème (index 2)
             const displayOrder = [data[1], data[0], data[2]].filter(Boolean);
-            const medals = { 0: '🥈', 1: '🥇', 2: '🥉' }; // Map index d'affichage -> Médaille
+            const medals = { 0: '🥈', 1: '🥇', 2: '🥉' };
             const classes = { 0: 'second', 1: 'first', 2: 'third' };
 
             return displayOrder.map((item, index) => {
                 const podiumClass = classes[index];
                 const medal = medals[index];
-
-                // Harmonisation : Titre principal en gras, sous-titre en gris
                 const title = isArtist ? item.artist_name : item.track_name;
                 const subtitle = isArtist ? "" : `<p>${item.artist_name}</p>`;
 
@@ -91,6 +84,39 @@ async function loadPodiums() {
     }
 }
 
+async function loadOfficialArchives() {
+    try {
+        const [artists, tracks] = await Promise.all([
+            fetch(`${API_URL}/official-top-artists`).then(r => r.json()),
+            fetch(`${API_URL}/official-top-tracks`).then(r => r.json())
+        ]);
+
+        document.getElementById('official-artists-list').innerHTML = artists.map((a, i) => `
+            <div class="official-item">
+                <span class="rank">${i+1}</span>
+                <img src="${a.image || DEFAULT_LOGO}" style="border-radius: 50%">
+                <div class="official-info">
+                    <strong>${a.name}</strong>
+                    <small>${a.genres.join(', ')}</small>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('official-tracks-list').innerHTML = tracks.map((t, i) => `
+            <div class="official-item">
+                <span class="rank">${i+1}</span>
+                <img src="${t.cover || DEFAULT_LOGO}">
+                <div class="official-info">
+                    <strong>${t.name}</strong>
+                    <small>${t.artist}</small>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) { 
+        console.error("Erreur Archives:", e); 
+    }
+}
+
 async function syncData() {
     const btn = document.querySelector('button');
     btn.innerText = "⏳ Synchro...";
@@ -111,8 +137,8 @@ async function syncData() {
 async function init() {
     await loadStats();
     await loadPodiums();
+    await loadOfficialArchives();
     await loadHistory();
 }
 
-// Lancement au chargement
 document.addEventListener('DOMContentLoaded', init);
